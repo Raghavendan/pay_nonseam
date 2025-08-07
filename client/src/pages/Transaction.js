@@ -54,7 +54,9 @@ function Transaction() {
       console.error("❌ Decryption error:", err);
       setError(`Failed to decrypt: ${err.message}`);
     }
+    console.log("✅ Transaction page loaded");
   }, [location.search]);
+  
 
   return (
     <div style={{ fontFamily: 'Arial, sans-serif', padding: '20px', textAlign: 'center' }}>
