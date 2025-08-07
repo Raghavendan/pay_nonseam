@@ -22,7 +22,7 @@ app.post("/transaction", (req, res) => {
   });
 
   // Redirect with query parameters
-  const redirectUrl = `/transaction`;
+  const redirectUrl = `/transaction?encData=${encodeURIComponent(encData)}&AuthID=${encodeURIComponent(AuthID)}&Status=${encodeURIComponent(Status)}`;
   return res.redirect(302, redirectUrl);
 });
 

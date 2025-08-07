@@ -4,8 +4,7 @@ import Signup from './pages/Signup';
 import Login from './pages/Login';
 import Main from './pages/Main';
 import StartTrans from './pages/StartTrans';
-import Transaction from './pages/Transaction';  
-
+import Transaction from './pages/Transaction';
 
 
 function App() {
