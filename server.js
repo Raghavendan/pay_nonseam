@@ -11,8 +11,8 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-// 👉 Payment gateway will POST to this endpoint
-app.post("/transaction", (req, res) => {
+// 👉 NEW Dedicated callback endpoint for the payment gateway
+app.post("/payment-callback", (req, res) => {
   const { encData, AuthID, Status } = req.body;
 
   console.log("🔁 Received POST from payment gateway:", {
@@ -21,7 +21,7 @@ app.post("/transaction", (req, res) => {
     Status,
   });
 
-  // Redirect with query parameters
+  // Redirect to the React app's client-side transaction page
   const redirectUrl = `/transaction?encData=${encodeURIComponent(encData)}&AuthID=${encodeURIComponent(AuthID)}&Status=${encodeURIComponent(Status)}`;
   return res.redirect(302, redirectUrl);
 });
