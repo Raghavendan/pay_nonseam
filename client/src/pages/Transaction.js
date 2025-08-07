@@ -250,6 +250,7 @@ const Transaction = () => {
           </div>
 
           {/* Customer Info */}
+          
           <div style={{ 
             backgroundColor: '#f8f9fa', 
             padding: '20px', 

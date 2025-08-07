@@ -2,37 +2,68 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const bodyParser = require("body-parser");
+const morgan = require("morgan"); // For logging
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// Middleware
+// Enhanced middleware
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+app.use(morgan('dev'));  // Request logging
 
-// 👉 NEW Dedicated callback endpoint for the payment gateway
+// Payment Callback Endpoint (Enhanced)
 app.post("/payment-callback", (req, res) => {
-  const { encData, AuthID, Status } = req.body;
+  try {
+    console.log("🔵 Received callback request body:", req.body);
+    console.log("🔵 Received callback request query:", req.query);
+    
+    // Handle both POST body and query params
+    const encData = req.body.encData || req.query.encData;
+    const AuthID = req.body.AuthID || req.query.AuthID;
+    const Status = req.body.Status || req.query.Status;
 
-  console.log("🔁 Received POST from payment gateway:", {
-    encData,
-    AuthID,
-    Status,
-  });
+    if (!encData || !AuthID) {
+      console.error("❌ Missing required parameters");
+      return res.status(400).json({
+        status: "error",
+        message: "Missing required parameters: encData and AuthID"
+      });
+    }
 
-  // Redirect to the React app's client-side transaction page
-  const redirectUrl = `/transaction?encData=${encodeURIComponent(encData)}&AuthID=${encodeURIComponent(AuthID)}&Status=${encodeURIComponent(Status)}`;
-  return res.redirect(302, redirectUrl);
+    // Add additional validation if needed
+    if (typeof encData !== "string" || encData.length < 10) {
+      console.error("❌ Invalid encData format");
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid encData format"
+      });
+    }
+
+    // Success response - redirect to frontend with parameters
+    const redirectUrl = `/transaction?encData=${encodeURIComponent(encData)}&AuthID=${encodeURIComponent(AuthID)}`;
+    if (Status) redirectUrl += `&Status=${encodeURIComponent(Status)}`;
+
+    console.log("🔵 Redirecting to:", redirectUrl);
+    return res.redirect(302, redirectUrl);
+
+  } catch (error) {
+    console.error("❌ Error in callback handler:", error);
+    return res.status(500).json({
+      status: "error",
+      message: "Internal server error"
+    });
+  }
 });
 
-// Serve React build (assuming React is built into /build folder)
+// Serve React app
 app.use(express.static(path.join(__dirname, "build")));
-app.get("*", (req, res) =>
-  res.sendFile(path.join(__dirname, "build", "index.html"))
-);
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "build", "index.html"));
+});
 
-// Start server
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🔄 Callback URL: http://yourdomain.com/payment-callback`);
 });
