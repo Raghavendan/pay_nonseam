@@ -17,35 +17,25 @@ app.use(morgan('dev'));  // Request logging
 app.post("/transaction", (req, res) => {
   try {
     console.log("🔵 Received callback request body:", req.body);
-    console.log("🔵 Received callback request query:", req.query);
-    
-    // Handle both POST body and query params
-    const encData = req.body.encData || req.query.encData;
-    const AuthID = req.body.AuthID || req.query.AuthID;
-    const Status = req.body.Status || req.query.Status;
+    console.log("🔍 Full body:", JSON.stringify(req.body, null, 2));
 
-    if (!encData || !AuthID) {
-      console.error("❌ Missing required parameters");
+    // ✅ Use 'respData' and 'AuthID' — these are what the gateway sends
+    const respData = req.body.respData;  // ← This is the encrypted payload
+    const AuthID = req.body.AuthID;
+    const AggRefNo = req.body.AggRefNo;
+
+    if (!respData || !AuthID) {
+      console.error("❌ Missing required parameters: respData and AuthID");
       return res.status(400).json({
         status: "error",
-        message: "Missing required parameters: encData and AuthID"
+        message: "Missing required parameters: respData and AuthID"
       });
     }
 
-    // Add additional validation if needed
-    if (typeof encData !== "string" || encData.length < 10) {
-      console.error("❌ Invalid encData format");
-      return res.status(400).json({
-        status: "error",
-        message: "Invalid encData format"
-      });
-    }
+    // ✅ Redirect to your React app with the data
+    const redirectUrl = `/transaction-result?respData=${encodeURIComponent(respData)}&AuthID=${encodeURIComponent(AuthID)}${AggRefNo ? '&AggRefNo=' + encodeURIComponent(AggRefNo) : ''}`;
 
-    // Success response - redirect to frontend with parameters
-    const redirectUrl = `/transaction?encData=${encodeURIComponent(encData)}&AuthID=${encodeURIComponent(AuthID)}`;
-    if (Status) redirectUrl += `&Status=${encodeURIComponent(Status)}`;
-
-    console.log("🔵 Redirecting to:", redirectUrl);
+    console.log("🚀 Redirecting to:", redirectUrl);
     return res.redirect(302, redirectUrl);
 
   } catch (error) {
