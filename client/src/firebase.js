@@ -1,6 +1,6 @@
 // fiirebase.js
 import { initializeApp } from "firebase/app";
-import { getDatabase, ref, push ,get} from "firebase/database";
+import { getDatabase, ref, push ,get ,set} from "firebase/database";
 
 // Firebase config
 const firebaseConfig = {
@@ -16,4 +16,4 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
-export { database, ref, push , get }; 
+export { database, ref, push , get ,set}; 
