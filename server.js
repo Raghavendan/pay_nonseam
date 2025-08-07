@@ -1,69 +1,83 @@
-const express = require("express");
-const cors = require("cors");
-const path = require("path");
-const bodyParser = require("body-parser");
-const morgan = require("morgan"); // For logging
-
+// server.js
+const express = require('express');
+const crypto = require('crypto');
+const bodyParser = require('body-parser');
 const app = express();
-const PORT = process.env.PORT || 8080;
 
-// Enhanced middleware
-app.use(cors());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
-app.use(morgan('dev'));  // Request logging
+app.use(bodyParser.urlencoded({ extended: true })); // Important: payment gateways often use x-www-form-urlencoded
+app.use(bodyParser.json()); // Also support JSON
 
-// Payment Callback Endpoint (Enhanced)
-app.post("/payment-callback", (req, res) => {
+// Your AES decryption function
+function decryptAES256(encryptedData, authKey) {
+  const key = crypto.createHash('sha256').update(authKey).digest(); // 32-byte key
+  const [data, ivHex] = encryptedData.split('::'); // Assuming format: base64Data::ivHex
+  const iv = Buffer.from(ivHex, 'hex');
+  const encryptedText = Buffer.from(data, 'base64');
+  const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+  let decrypted = decipher.update(encryptedText);
+  decrypted = Buffer.concat([decrypted, decipher.final()]);
+  return decrypted.toString('utf8');
+}
+
+// Mock AuthKey (should match what you used to encrypt)
+const AUTH_KEY = 'Qv0rg4oN8cS9sm6PS3rr6fu7MN2FB0Oo'; // Keep this secure
+
+// POST route to handle callback from payment gateway
+app.post('/transaction', (req, res) => {
   try {
-    console.log("🔵 Received callback request body:", req.body);
-    console.log("🔵 Received callback request query:", req.query);
-    
-    // Handle both POST body and query params
-    const encData = req.body.encData || req.query.encData;
-    const AuthID = req.body.AuthID || req.query.AuthID;
-    const Status = req.body.Status || req.query.Status;
+    console.log('Raw body:', req.body);
 
-    if (!encData || !AuthID) {
-      console.error("❌ Missing required parameters");
-      return res.status(400).json({
-        status: "error",
-        message: "Missing required parameters: encData and AuthID"
-      });
+    const { AuthID, AggRefNo, respData } = req.body;
+
+    if (!respData) {
+      return res.status(400).send('Missing respData');
     }
 
-    // Add additional validation if needed
-    if (typeof encData !== "string" || encData.length < 10) {
-      console.error("❌ Invalid encData format");
-      return res.status(400).json({
-        status: "error",
-        message: "Invalid encData format"
-      });
+    // Decrypt the respData
+    let decrypted;
+    try {
+      decrypted = decryptAES256(respData, AUTH_KEY);
+    } catch (err) {
+      console.error('Decryption failed:', err);
+      return res.status(400).send('Failed to decrypt data');
     }
 
-    // Success response - redirect to frontend with parameters
-    const redirectUrl = `/transaction?encData=${encodeURIComponent(encData)}&AuthID=${encodeURIComponent(AuthID)}`;
-    if (Status) redirectUrl += `&Status=${encodeURIComponent(Status)}`;
+    console.log('Decrypted Data:', decrypted);
 
-    console.log("🔵 Redirecting to:", redirectUrl);
-    return res.redirect(302, redirectUrl);
+    // Parse decrypted string (should be JSON string)
+    const txnStatus = JSON.parse(decrypted);
 
-  } catch (error) {
-    console.error("❌ Error in callback handler:", error);
-    return res.status(500).json({
-      status: "error",
-      message: "Internal server error"
-    });
+    // Respond with HTML page showing status (or redirect)
+    res.send(`
+      <html>
+        <head><title>Payment Status</title></head>
+        <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+          <h2>Transaction Status</h2>
+          <pre>${JSON.stringify(txnStatus, null, 2)}</pre>
+          <br/>
+          <a href="/">← Back to Home</a>
+        </body>
+      </html>
+    `);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Internal Server Error');
   }
 });
 
-// Serve React app
-app.use(express.static(path.join(__dirname, "build")));
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "build", "index.html"));
+// Optional: Serve frontend (if you want same project)
+app.get('/', (req, res) => {
+  res.send(`
+    <html>
+      <body>
+        <h1>Welcome to Payment Portal</h1>
+        <p>Make a payment to get redirected.</p>
+      </body>
+    </html>
+  `);
 });
 
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`🔄 Callback URL: http://yourdomain.com/payment-callback`);
+  console.log(`Server running on port ${PORT}`);
 });

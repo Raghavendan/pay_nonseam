@@ -1,12 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { database, ref, get } from "../firebase";
+import { database, ref, get, set } from "../firebase";
 import CryptoJS from "crypto-js";
 
 const MainPage = () => {
   const location = useLocation();
   const [username, setUsername] = useState("User");
   const [amount, setAmount] = useState("");
+
+
+
+  
+
+  
+
 
   useEffect(() => {
     if (location.state && location.state.username) {
@@ -26,11 +33,14 @@ const MainPage = () => {
     )}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
   };
 
+  
+
   const encryptTransaction = (user) => {
     const payload = {
       AuthID: 'M00006572',
       AuthKey: 'Qv0rg4oN8cS9sm6PS3rr6fu7MN2FB0Oo',
       CustRefNum: user.custrefno,
+      AggRefNo:'1852521913300193434',
       txn_Amount: user.amount,
       PaymentDate: user.paymentdate,
       ContactNo: user.mobile,
@@ -99,6 +109,10 @@ const MainPage = () => {
 
         const encryptedData = encryptTransaction(fullUserData);
 
+        // 🔥 Save only encrypted string in Firebase under "encrypted/{custrefno}"
+        const encryptedRef = ref(database, `encrypted/${fullUserData.custrefno}`);
+        await set(encryptedRef, encryptedData);
+
         // Create form and submit
         const form = document.createElement("form");
         form.method = "POST";
@@ -127,6 +141,7 @@ const MainPage = () => {
     alert("An error occurred while processing the payment.");
   }
 };
+
 
   return (
     <div style={{ padding: "2rem", textAlign: "center" }}>
@@ -160,7 +175,11 @@ const MainPage = () => {
         >
           Start Payment
         </button>
+
+
       </div>
+    
+
     </div>
   );
 };
