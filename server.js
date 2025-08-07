@@ -33,7 +33,7 @@ app.post("/transaction", (req, res) => {
     }
 
     // ✅ Redirect to your React app with the data
-    const redirectUrl = `/transaction-result?respData=${encodeURIComponent(respData)}&AuthID=${encodeURIComponent(AuthID)}${AggRefNo ? '&AggRefNo=' + encodeURIComponent(AggRefNo) : ''}`;
+    const redirectUrl = `/transaction?respData=${encodeURIComponent(respData)}&AuthID=${encodeURIComponent(AuthID)}${AggRefNo ? '&AggRefNo=' + encodeURIComponent(AggRefNo) : ''}`;
 
     console.log("🚀 Redirecting to:", redirectUrl);
     return res.redirect(302, redirectUrl);
