@@ -5,7 +5,7 @@ import Login from './pages/Login';
 import Main from './pages/Main';
 // import StartTrans from './pages/StartTrans';
 import Transaction from './pages/Transaction';
-import Trans from './pages/Trans';
+import Trans from './pages/NewTrans';
 
 
 function App() {
