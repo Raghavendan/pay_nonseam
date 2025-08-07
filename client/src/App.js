@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Main from './pages/Main';
 // import StartTrans from './pages/StartTrans';
 import Transaction from './pages/Transaction';
+import Trans from './pages/Trans';
 
 
 function App() {
@@ -12,12 +13,13 @@ function App() {
     <Router>
       <div className="App">
         <Routes>
-          <Route path="/" element={<Signup />} />
-          <Route path="/login" element={< Login />} />
-          <Route path="/signup" element={<Signup />} />
+          <Route path="/Signup" element={<Signup />} />
+          <Route path="/" element={< Login />} />
           <Route path="/main" element={< Main />} />
           {/* <Route path="/startTrans" element={<StartTrans />} /> */}
           <Route path="/transaction" element={<Transaction />} />
+          <Route path="/trans" element={<Trans />} />
+
 
 
         </Routes>

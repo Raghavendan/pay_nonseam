@@ -97,7 +97,7 @@ const MainPage = () => {
           amount,
           paymentdate: getCurrentFormattedDateTime(),
           integrationType: "nonseamless",
-          callbackurl: "https://nonseam-pay.onrender.com/transaction",
+          callbackurl: "https://nonseam-pay.onrender.com/trans",
           mop: "NA",
           moptype: "NA",
           mopdetails: "NA",
